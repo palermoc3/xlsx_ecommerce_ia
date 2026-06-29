@@ -2,7 +2,7 @@ require "test_helper"
 
 class BusinessQueriesTest < ActiveSupport::TestCase
   setup do
-    @period = Time.zone.local(2026, 1, 1)..Time.zone.local(2026, 1, 31, 23, 59, 59)
+    @period = Time.zone.local(2035, 1, 1)..Time.zone.local(2035, 1, 31, 23, 59, 59)
     @user = create_user!(email: "cliente-principal@example.com")
     @other_user = create_user!(email: "cliente-secundario@example.com")
     @shirt = create_product!(name: "Camiseta Analitica")
@@ -12,7 +12,7 @@ class BusinessQueriesTest < ActiveSupport::TestCase
       user: @user,
       product: @shirt,
       status: :paid,
-      purchase_date: Time.zone.local(2026, 1, 5, 10),
+      purchase_date: Time.zone.local(2035, 1, 5, 10),
       quantity: 2,
       unit_price: 80,
       cost_price: 35
@@ -22,7 +22,7 @@ class BusinessQueriesTest < ActiveSupport::TestCase
       user: @user,
       product: @shoe,
       status: :shipped,
-      purchase_date: Time.zone.local(2026, 1, 10, 12),
+      purchase_date: Time.zone.local(2035, 1, 10, 12),
       quantity: 1,
       unit_price: 120,
       cost_price: 60
@@ -32,7 +32,7 @@ class BusinessQueriesTest < ActiveSupport::TestCase
       user: @other_user,
       product: @shoe,
       status: :pending,
-      purchase_date: Time.zone.local(2026, 1, 12, 12),
+      purchase_date: Time.zone.local(2035, 1, 12, 12),
       quantity: 5,
       unit_price: 120,
       cost_price: 60
@@ -42,7 +42,7 @@ class BusinessQueriesTest < ActiveSupport::TestCase
   test "average ticket returns monthly completed purchase metrics" do
     result = AverageTicketQuery.new(period: @period).call.first
 
-    assert_equal "2026-01", result.month
+    assert_equal "2035-01", result.month
     assert_equal 2, result.purchase_count
     assert_equal 280.to_d, result.revenue
     assert_equal 140.0, result.avg_ticket
@@ -69,7 +69,7 @@ class BusinessQueriesTest < ActiveSupport::TestCase
   test "monthly profit groups completed item revenue and cost by month" do
     result = MonthlyProfitQuery.new(period: @period).call.first
 
-    assert_equal "2026-01", result.month
+    assert_equal "2035-01", result.month
     assert_equal 2, result.purchase_count
     assert_equal 280.to_d, result.item_revenue
     assert_equal 130.to_d, result.item_cost

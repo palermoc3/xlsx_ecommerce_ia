@@ -1,4 +1,6 @@
 class AverageTicketQuery
+  MONTH_EXPRESSION = "strftime('%Y-%m', purchases.purchase_date)".freeze
+
   def initialize(period: 1.year.ago..Time.current)
     @period = period
   end
@@ -6,20 +8,16 @@ class AverageTicketQuery
   def call
     Purchase.completed
       .where(purchase_date: period)
-      .group(month_expression)
+      .group(Arel.sql(MONTH_EXPRESSION))
       .select(
-        "#{month_expression} AS month",
-        "COUNT(*) AS purchase_count",
-        "SUM(total_amount) AS revenue",
-        "ROUND(SUM(total_amount) / COUNT(*), 2) AS avg_ticket"
+        Arel.sql("#{MONTH_EXPRESSION} AS month"),
+        Arel.sql("COUNT(*) AS purchase_count"),
+        Arel.sql("SUM(total_amount) AS revenue"),
+        Arel.sql("ROUND(SUM(total_amount) / COUNT(*), 2) AS avg_ticket")
       )
       .order("month ASC")
   end
 
   private
     attr_reader :period
-
-    def month_expression
-      "strftime('%Y-%m', purchases.purchase_date)"
-    end
 end

@@ -2,5 +2,7 @@
 require_relative "../config/boot"
 require "bundler/audit/cli"
 
+needs_default_check_options = ARGV.empty? || ARGV.include?("check")
 ARGV.concat %w[ --config config/bundler-audit.yml ] if ARGV.empty? || ARGV.include?("check")
+ARGV.concat [ "--database", "storage/ruby-advisory-db" ] if needs_default_check_options
 Bundler::Audit::CLI.start
