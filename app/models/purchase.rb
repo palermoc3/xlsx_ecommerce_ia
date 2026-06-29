@@ -19,6 +19,8 @@ class Purchase < ApplicationRecord
   enum :status, STATUSES, default: :pending
   enum :payment_method, PAYMENT_METHODS
 
+  scope :completed, -> { where(status: [ statuses[:paid], statuses[:shipped] ]) }
+
   validates :status, :payment_method, :purchase_date, presence: true
   validates :subtotal, :shipping_cost, :discount_amount, :total_amount,
     numericality: { greater_than_or_equal_to: 0 }
