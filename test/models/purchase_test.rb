@@ -24,4 +24,26 @@ class PurchaseTest < ActiveSupport::TestCase
     assert_includes purchase.errors[:status], "can't be blank"
     assert_includes purchase.errors[:payment_method], "can't be blank"
   end
+
+  test "destroys item purchases when purchase is destroyed" do
+    user = create_user!
+    product = create_product!
+    purchase = build_purchase(user: user)
+    purchase.subtotal = product.price
+    purchase.shipping_cost = 0
+    purchase.discount_amount = 0
+    purchase.total_amount = product.price
+    purchase.save!
+
+    purchase.item_purchases.create!(
+      product: product,
+      quantity: 1,
+      unit_price: product.price,
+      subtotal: product.price
+    )
+
+    assert_difference "ItemPurchase.count", -1 do
+      purchase.destroy!
+    end
+  end
 end
