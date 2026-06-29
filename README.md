@@ -80,8 +80,9 @@ RUBOCOP_CACHE_ROOT=tmp/rubocop_cache bin/rubocop
 Estado validado em 2026-06-29:
 
 ```text
-25 runs, 101 assertions, 0 failures, 0 errors, 0 skips
-57 files inspected, no offenses detected
+27 runs, 106 assertions, 0 failures, 0 errors, 0 skips
+58 files inspected, no offenses detected
+bin/ci passed
 ```
 
 ## Producao

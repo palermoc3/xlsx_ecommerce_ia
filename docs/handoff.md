@@ -532,7 +532,8 @@ Testes existentes:
   test/integration/purchase_flow_test.rb: 1 teste | fluxo completo user -> purchase -> item -> total
 
 Suite completa em 2026-06-29:
-  bin/rails test -> 25 runs, 101 assertions, 0 failures, 0 errors, 0 skips
+  bin/rails test -> 27 runs, 106 assertions, 0 failures, 0 errors, 0 skips
+  bin/ci -> passed
 ```
 
 Comportamentos criticos com teste:
@@ -541,6 +542,7 @@ Comportamentos criticos com teste:
 [x] Purchase#total_amount_consistency (subtotal + frete - desconto)
 [x] ItemPurchase#subtotal (quantity x unit_price)
 [x] Review#rating entre 1 e 5
+[x] Review uniqueness por user/product
 [x] Coupon#code unico
 [x] Product price > cost_price
 [x] Cart dependent destroy de cart_items
@@ -551,7 +553,6 @@ Comportamentos criticos sem teste ou com cobertura incompleta:
 
 ```text
 - Purchase enums status/payment_method nao tem teste direto.
-- Review uniqueness por user/product nao tem teste.
 - Cart nao testa ausencia de user.
 ```
 
@@ -626,14 +627,15 @@ CRITICO (P0 - impede uso do projeto):
 ALTO (P1 - compromete qualidade dos dados):
 
 ```text
-- [ ] Review permite multiplas avaliacoes do mesmo user para o mesmo product; decidir se isso e regra de negocio aceita ou adicionar unicidade.
+- nenhum P1 aberto em 2026-06-29.
+- Review possui validacao e indice unico por user/product.
 ```
 
 MEDIO (P2 - qualidade e completude):
 
 ```text
-- [ ] README e handoff devem ser mantidos sincronizados a cada mudanca relevante.
-- [ ] ProductView nao existe no schema atual; conversao por visualizacao permanece fora do XLSX.
+- nenhum P2 operacional aberto em 2026-06-29.
+- ProductView nao existe no schema atual; conversao por visualizacao esta documentada como limitacao em conselhos.md.
 ```
 
 BAIXO (P3 - seguranca e producao):
@@ -709,13 +711,7 @@ Nenhum P0 aberto.
 
 --- P1 -----------------------------------------------------------------------
 
-[P1-01] review-uniqueness-integrity
-Branch:  feat/model-data-integrity
-Commit:  feat(models): enforce one review per user and product
-Spec:    Adicionar validacao e indice unico para reviews por user/product,
-         se a regra de negocio for uma avaliacao por cliente/produto.
-Aceite:  bin/rails test test/models/review_test.rb
-         bin/rails db:migrate:status
+Nenhum P1 aberto.
 
 --- P2 -----------------------------------------------------------------------
 
@@ -732,19 +728,19 @@ Nenhum P3 aberto apos security-production-setup.
 RESUMO EXECUTIVO - PEDRO para VERA
 
 Projeto lido: xlsx_ecommerce
-Data: 2026-06-28
+Data: 2026-06-29
 
 Estado atual em 3 linhas:
-  A suite esta verde com 25 testes e 101 assertions.
+  A suite esta verde com 27 testes e 106 assertions; bin/ci passou completo.
   O banco tem volume analitico forte, purchase_date preenchido e entidades operacionais populadas.
   XlsxExporter, queries analiticas, README, conselhos.md e configuracao de producao existem e foram validados.
 
 Proxima acao recomendada para VERA:
-  Fechar a ultima decisao de integridade: review unica por user/product ou multiplas reviews permitidas.
+  Projeto finalizado no escopo do roadmap local; proximo passo e publicar/abrir PR se desejado.
 
 Tasks que dependem de outras:
   Nenhuma dependencia bloqueante aberta.
 
 Risco principal identificado:
-  Sem unicidade de Review, rankings de satisfacao por produto podem contar multiplas avaliacoes do mesmo cliente para o mesmo produto.
+  Nenhum risco bloqueante aberto. ProductView permanece fora do schema e a limitacao esta documentada.
 ```
