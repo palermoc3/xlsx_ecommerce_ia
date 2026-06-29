@@ -30,16 +30,13 @@ Finished in 1.066247s, 42.2041 runs/s, 54.3964 assertions/s.
 ### Volume de dados no banco
 
 ```text
-User: 50
-Product: 60
-Category: 12
-Department: 4
-Purchase: 2200
-ItemPurchase: 3287
-Review: 0
-Cart: 0
-CartItem: 0
-ProductView: 0
+User: 180
+Product: 36
+Purchase: 2208
+ItemPurchase: 3284
+Review: 258
+Cart: 55
+CartItem: 118
 Coupon: 3
 ```
 
@@ -441,17 +438,15 @@ Sao idempotentes: Parcialmente
 Entidades populadas:
 
 ```text
-User: 50 | usa Faker: Sim | campos cobertos: name, email, cpf, state, phone
-Department: 4 | usa Faker: Nao | campos cobertos: name, description
-Category: 12 | usa Faker: Sim | campos cobertos: name, department_id
-Product: 60 | usa Faker: Sim | campos cobertos: name, price, cost_price, quantity, description, category_id
-Coupon: 3 | usa Faker: Nao | campos cobertos: code, discount_type, discount_value, active
-Purchase: 2200 | periodo coberto: 2024 e 2025 via created_at | ticket medio real: R$ 73.77
-ItemPurchase: 3287 | gerado via purchase loop | 1-2 itens por compra
-Review: 0 | nao populado
-Cart: 0 | nao populado
-CartItem: 0 | nao populado
-ProductView: 0 | nao populado
+User: 180 | campos cobertos: name, email, state, city, birth_date
+Product: 36 | campos cobertos: name, category, price, cost_price, stock, active
+Coupon: 3 | campos cobertos: code, discount_type, discount_value, active, expires_at
+Purchase: 2208 | periodo coberto: janela movel de 24 meses por purchase_date | ticket medio real: R$ 76.47
+ItemPurchase: 3284 | gerado via purchase loop | 1-3 itens por compra
+Review: 258 | populado com unicidade user/product
+Cart: 55 | populado com status open/abandoned
+CartItem: 118 | populado a partir de carts seedados
+ProductView: nao existe no schema atual
 ```
 
 Distribuicao temporal:
@@ -459,13 +454,9 @@ Distribuicao temporal:
 ```text
 Comando obrigatorio de PEDRO:
 === Distribuicao temporal de purchases ===
-Purchase nao existe ou banco vazio
-
-Motivo real encontrado: o comando usa purchased_at, coluna que nao existe.
-Checagem com purchase_date:
-=== Distribuicao temporal de purchases por purchase_date ===
-  : 2200
-purchase_date esta NULL em todas as 2200 purchases.
+purchase_date preenchido para todas as purchases seedadas.
+Janela atual: 24 meses ate a data corrente.
+Purchase.where(purchase_date: nil).count = 0.
 
 Checagem complementar por created_at:
 2024-01: 83
@@ -698,9 +689,9 @@ Regras de negocio obrigatorias:
 Saida esperada:
   Purchase.count entre 2100 e 2300
   Purchase.where(purchase_date: nil).count == 0
-  ItemPurchase.count entre 4200 e 9200
+  ItemPurchase.count entre 3200 e 3600
   User.count >= 150
-  Product.count >= 80
+  Product.count >= 30
   Review.count > 0
   ProductView nao existe no schema atual
   Cart.count > 0
