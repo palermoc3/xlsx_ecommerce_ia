@@ -579,25 +579,59 @@ Comportamentos criticos sem teste ou com cobertura incompleta:
 
 ```text
 Queries existentes (app/queries/):
-  - MonthlyRevenueQuery: soma Purchase.total_amount para status delivered filtrando por year/month em purchase_date | teste em test/queries/: Sim
+  - AverageTicketQuery: ticket medio mensal de purchases concluidas no periodo.
+  - ProductRankingQuery: ranking de produtos por quantidade vendida e receita de item.
+  - CategoryMarginQuery: receita, custo, margem bruta e percentual por categoria.
+  - MonthlyProfitQuery: receita de itens, custo de itens e lucro bruto por mes.
+  - TopCustomersQuery: ranking de clientes por receita e frequencia de compras.
+
+Teste em test/queries/: Sim
 
 Services existentes (app/services/):
-  - nenhum service encontrado
+  - XlsxExporter: gera dataset_analitico_mei.xlsx com Fato Vendas,
+    Dimensao Produtos e Dimensao Clientes.
 
 Lógica de negocio em lugar errado (controllers, views, helpers):
   - none encontrado por busca em app/controllers, app/views e app/helpers.
 ```
 
-Conteudo real de `MonthlyRevenueQuery`:
+Queries canonicas validadas em 2026-06-29:
 
 ```ruby
-class MonthlyRevenueQuery
-  def self.call(year:, month:)
-    Purchase.where(status: :delivered)
-            .where("strftime('%Y', purchase_date) = ? AND strftime('%m', purchase_date) = ?", year.to_s, format("%02d", month))
-            .sum(:total_amount)
-  end
-end
+# Ticket medio mensal
+AverageTicketQuery.new(period: 2.years.ago..Time.current).call
+
+# Ranking de produtos por receita
+ProductRankingQuery.new(period: 2.years.ago..Time.current, limit: 10).call
+
+# Margem por categoria
+CategoryMarginQuery.new(period: 2.years.ago..Time.current).call
+
+# Lucro mensal
+MonthlyProfitQuery.new(period: 2.years.ago..Time.current).call
+
+# Top clientes
+TopCustomersQuery.new(period: 2.years.ago..Time.current, limit: 10).call
+```
+
+Cuidados de granularidade:
+
+```text
+- Receita por produto usa ItemPurchase.subtotal, nao Purchase.total_amount,
+  para evitar duplicar frete/desconto em pedidos com multiplos itens.
+- Ticket medio e top clientes usam Purchase.total_amount, pois a granularidade
+  da pergunta e pedido/cliente.
+- Margem e lucro usam custo atual de Product.cost_price multiplicado pela
+  quantidade do item. O schema atual nao persiste custo historico no item.
+```
+
+Registro DIANA - 2026-06-29:
+
+```text
+- Adicionadas queries analiticas em app/queries/.
+- Adicionado teste canonico em test/queries/business_queries_test.rb.
+- XlsxExporter ja existe em app/services/xlsx_exporter.rb e permanece sem
+  alteracao de abas neste ciclo.
 ```
 
 ## Secao 6 - Inconsistencias e Gaps
