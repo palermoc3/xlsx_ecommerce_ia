@@ -532,21 +532,21 @@ Gaps nos seeds:
 
 ```text
 Testes existentes:
-  test/models/cart_item_test.rb: 3 testes | quantity positiva, zero, ausente
-  test/models/cart_test.rb: 2 testes | cart com usuario, dependent destroy de cart_items
-  test/models/category_test.rb: 2 testes | name presence, categoria valida
-  test/models/coupon_test.rb: 7 testes | codigo duplicado, discount_value, expired?, usable?
-  test/models/department_test.rb: 2 testes | name presence, departamento valido
-  test/models/item_purchase_test.rb: 4 testes | subtotal = quantity * unit_price, quantity zero/negativa
-  test/models/product_test.rb: 7 testes | price > cost_price, price/stock negativos, name presence
-  test/models/product_view_test.rb: 2 testes | viewed_at automatico e explicito
-  test/models/purchase_test.rb: 5 testes | total financeiro, subtotal ausente, coupon opcional, tolerancia
-  test/models/review_test.rb: 4 testes | rating 1..5 e ausente
-  test/models/user_test.rb: 4 testes | valido, name, email duplicado, telefone duplicado
+  test/models/cart_item_test.rb: 3 testes | subtotal valido, subtotal incorreto, quantity zero
+  test/models/cart_test.rb: 2 testes | status default, dependent destroy de cart_items
+  test/models/coupon_test.rb: 2 testes | codigo duplicado, usable? ativo/expirado/inativo
+  test/models/item_purchase_test.rb: 2 testes | subtotal = quantity * unit_price, quantity positiva
+  test/models/product_test.rb: 2 testes | price > cost_price, stock nao negativo
+  test/models/purchase_test.rb: 3 testes | total financeiro, purchase valido, status/payment_method
+  test/models/review_test.rb: 1 teste | rating entre 1 e 5
+  test/models/user_test.rb: 3 testes | campos obrigatorios, email duplicado, maioridade
 
-  test/queries/monthly_revenue_query_test.rb: 1 teste | soma compras delivered por mes
-  test/services/: nao existe
-  test/integration/purchase_flow_test.rb: 2 testes | fluxo financeiro multi-itens, bloqueio destroy product
+  test/queries/business_queries_test.rb: 5 testes | ticket medio, ranking, margem, lucro mensal, top clientes
+  test/services/xlsx_exporter_test.rb: 1 teste | abas esperadas, filtro de purchases concluidas, lucro bruto
+  test/integration/purchase_flow_test.rb: 1 teste | fluxo completo user -> purchase -> item -> total
+
+Suite completa em 2026-06-29:
+  bin/rails test -> 25 runs, 101 assertions, 0 failures, 0 errors, 0 skips
 ```
 
 Comportamentos criticos com teste:
@@ -557,22 +557,16 @@ Comportamentos criticos com teste:
 [x] Review#rating entre 1 e 5
 [x] Coupon#code unico
 [x] Product price > cost_price
+[x] Cart dependent destroy de cart_items
 [x] Integracao: fluxo completo de compra
 ```
 
 Comportamentos criticos sem teste ou com cobertura incompleta:
 
 ```text
-- User#must_be_adult nao tem teste de menor de idade.
-- User#normalize_name nao tem teste direto.
-- User#normalize_phone nao tem teste direto.
-- User#state enum nao tem teste.
 - Purchase enums status/payment_method nao tem teste direto.
-- MonthlyRevenueQuery usa purchase_date, mas seeds deixam purchase_date NULL.
 - Review uniqueness por user/product nao tem teste.
-- Product quantity existe no schema/seeds e nao tem teste/validacao.
 - Cart nao testa ausencia de user.
-- ProductView nao testa associacoes obrigatorias.
 ```
 
 ## Secao 5 - Queries e Services
