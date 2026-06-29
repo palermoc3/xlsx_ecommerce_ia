@@ -4,6 +4,7 @@
 # the same 24-month dataset with deterministic randomness.
 
 require "bigdecimal"
+require "set"
 
 SEED_EMAIL_DOMAIN = "xlsx-ecommerce.local"
 SEED_PRODUCT_PREFIX = "[seed] "
@@ -138,6 +139,7 @@ ActiveRecord::Base.transaction do
   end
 
   start_month = Date.current.beginning_of_month - (MONTH_COUNT - 1).months
+  reviewed_pairs = Set.new
 
   MONTH_COUNT.times do |month_index|
     month = start_month + month_index.months
@@ -195,7 +197,8 @@ ActiveRecord::Base.transaction do
         )
       end
 
-      next unless purchase_index % 9 == 0
+      review_key = [ user.id, chosen_products.first.id ]
+      next unless purchase_index % 9 == 0 && reviewed_pairs.add?(review_key)
 
       Review.create!(
         user: user,
