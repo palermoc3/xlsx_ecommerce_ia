@@ -355,12 +355,12 @@ Associacoes:
 Escopos definidos: nenhum
 Callbacks: nenhum
 Enums:
-  - payment_method: { pix: 0, credit_card: 1, debit_card: 2, boleto: 3 }
-  - status: { pending: 0, paid: 1, shipped: 2, delivered: 3, cancelled: 4 }
+  - payment_method: { pix: "pix", credit_card: "credit_card", debit_card: "debit_card" }
+  - status: { pending: "pending", paid: "paid", shipped: "shipped", canceled: "canceled" }
 Inconsistencias encontradas:
-  - seeds preenchem created_at, mas deixam purchase_date NULL em 2200 registros.
-  - has_many :item_purchases sem dependent definido.
-  - campos monetarios aceitam zero; regra sugerida pede greater_than 0 para alguns casos.
+  - Nenhuma inconsistencia P0/P1 aberta em 2026-06-29 para Purchase.
+  - purchase_date esta preenchido na base seed atual.
+  - Purchase#item_purchases usa dependent: :destroy no codigo atual.
 ```
 
 ### Entidade: Review
@@ -425,10 +425,8 @@ Callbacks:
 Enums:
   - state: UF brasileira em hash AC..TO
 Inconsistencias encontradas:
-  - email permite NULL no banco, mas model exige presence.
-  - name permite NULL no banco, mas model exige presence.
-  - birth_date, customer_since, gender, state, vip sem validacoes de presence.
-  - teste usa User!.new, causando failure.
+  - Nenhuma falha de teste aberta em 2026-06-29 para User.
+  - Schema atual exige name, email, birth_date e state como NOT NULL.
 ```
 
 ## Secao 3 - Estado dos Seeds
@@ -508,8 +506,8 @@ Regras de negocio embutidas nos seeds:
 - 20% de chance de cupom.
 - desconto igual ao discount_value do cupom.
 - frete rand(5.0..12.0).round(2).
-- payment_method sorteado entre pix, credit_card, debit_card, boleto.
-- status sempre delivered.
+- payment_method sorteado entre pix, credit_card, debit_card.
+- status de venda concluida usa paid/shipped.
 - 1-2 itens por compra.
 - ItemPurchase.quantity sempre 1.
 - total_amount e subtotal sao ajustados para preservar equacao financeira.
@@ -519,13 +517,10 @@ Regras de negocio embutidas nos seeds:
 Gaps nos seeds:
 
 ```text
-- Review, Cart, CartItem e ProductView nao sao limpos nem populados.
-- User nao preenche birth_date, customer_since, gender nem vip.
-- Product nao preenche stock nem brand; preenche quantity, que nao e validado no model.
-- Purchase nao preenche purchase_date, embora MonthlyRevenueQuery consulte purchase_date.
-- Seeds usam anos fixos 2024/2025, nao janela movel de 24 meses ate hoje.
-- Categorias podem ter nomes repetidos por Faker::Commerce.department(max: 1).
-- Cupons nao possuem expires_at.
+- Review, Cart e CartItem sao populados no seed atual.
+- ProductView nao existe no schema atual.
+- Purchase.purchase_date esta preenchido na base atual.
+- Cupons possuem expires_at opcional; usable? cobre active e expiracao.
 ```
 
 ## Secao 4 - Cobertura de Testes
@@ -633,39 +628,30 @@ Registro DIANA - 2026-06-29:
 CRITICO (P0 - impede uso do projeto):
 
 ```text
-- [ ] bin/rails test falha com 1 failure em UserTest#test_valido_com_dados_corretos.
-- [ ] test/models/user_test.rb usa User!.new na linha do teste valido; isso impede suite verde.
+- nenhum P0 aberto em 2026-06-29.
+- bin/rails test esta verde.
 ```
 
 ALTO (P1 - compromete qualidade dos dados):
 
 ```text
-- [ ] Purchase.purchase_date esta NULL em 2200/2200 registros, mas MonthlyRevenueQuery filtra por purchase_date.
-- [ ] Seeds nao populam Review, Cart, CartItem e ProductView.
-- [ ] Seeds nao limpam Review, Cart, CartItem e ProductView; idempotencia e parcial.
-- [ ] Nao existe app/services/ nem XlsxExporter, apesar de Gemfile incluir caxlsx/caxlsx_rails.
-- [ ] Review tem validacao de unicidade user_id/product_id sem indice unico no banco.
+- [ ] Review permite multiplas avaliacoes do mesmo user para o mesmo product; decidir se isso e regra de negocio aceita ou adicionar unicidade.
 ```
 
 MEDIO (P2 - qualidade e completude):
 
 ```text
-- [ ] UserTest cobre adulto valido, mas falha antes por constante/metodo incorreto User!.
-- [ ] User#must_be_adult, normalize_name e normalize_phone sem testes diretos.
-- [ ] Product.quantity existe e e populado, mas nao e validado/testado.
-- [ ] Product.stock e quantity coexistem; seeds preenchem quantity, model valida stock.
-- [ ] Purchase.has_many :item_purchases sem dependent definido.
-- [ ] Seeds usam anos fixos 2024/2025, nao periodo relativo a data atual.
-- [ ] Coupon.active, discount_type e expires_at sem validacoes de regra de uso alem de usable?.
+- [ ] README e handoff devem ser mantidos sincronizados a cada mudanca relevante.
+- [ ] ProductView nao existe no schema atual; conversao por visualizacao permanece fora do XLSX.
 ```
 
 BAIXO (P3 - seguranca e producao):
 
 ```text
-- [x] /config/*.key esta no .gitignore.
+- [x] /config/master.key e /config/*.key estao no .gitignore.
 - [x] Dockerfile existe.
 - [x] .kamal existe.
-- [ ] config/database.yml de production usa SQLite em storage/production.sqlite3; ok para template Rails/Kamal, mas nao usa DATABASE_URL.
+- [x] config/database.yml de production usa SQLite em storage/ por default e aceita paths via ENV.
 ```
 
 ## Secao 7 - Especificacao de Seeds Equivalente ou Superior
@@ -683,7 +669,7 @@ Alvos de volume:
   Category:     3-5 por department
   Product:      80-120 total, com price > cost_price, stock e quantity coerentes
   Coupon:       10-15, active variado, expires_at variado
-  Purchase:     2.100-2.300 em 24 meses, status majoritariamente delivered
+  Purchase:     2.100-2.300 em 24 meses, status majoritariamente paid/shipped
   ItemPurchase: 1-4 por purchase, subtotal = quantity * unit_price
   Review:       cerca de 30% das purchases/produtos com rating 1-5
   Cart:         snapshots de carrinhos abandonados para subset de usuarios
@@ -706,8 +692,8 @@ Regras de negocio obrigatorias:
   7. Produtos com price > cost_price.
   8. Cerca de 25% dos users vip, se campo existir.
   9. Estados distribuidos entre SP, RJ, MG, RS, PR, SC, BA, GO, DF.
-  10. Metodos: pix, credit_card, debit_card, boleto, respeitando enum real.
-  11. MonthlyRevenueQuery deve retornar valores apos db:seed, portanto purchase_date nao pode ficar NULL.
+  10. Metodos: pix, credit_card, debit_card, respeitando enum real.
+  11. Queries devem retornar valores apos db:seed, portanto purchase_date nao pode ficar NULL.
 
 Saida esperada:
   Purchase.count entre 2100 e 2300
@@ -716,7 +702,7 @@ Saida esperada:
   User.count >= 150
   Product.count >= 80
   Review.count > 0
-  ProductView.count > 0
+  ProductView nao existe no schema atual
   Cart.count > 0
   Ticket medio entre R$ 65,00 e R$ 85,00
 ```
@@ -728,87 +714,25 @@ BACKLOG SUGERIDO PARA VERA
 
 --- P0 -----------------------------------------------------------------------
 
-[P0-01] fix-user-test-suite
-Branch:  fix/user-test-suite
-Commit:  fix(tests): correct user model valid test setup
-Spec:    Corrigir a falha atual de bin/rails test. Evidencia:
-         UserTest#test_valido_com_dados_corretos falha em test/models/user_test.rb:14.
-         O arquivo usa User!.new no teste de usuario valido.
-Aceite:  bin/rails test -> 0 failures, 0 errors
-Bloqueia: validacao confiavel de qualquer task seguinte
+Nenhum P0 aberto.
 
 --- P1 -----------------------------------------------------------------------
 
-[P1-01] seeds-purchase-date-and-idempotency
-Branch:  fix/seeds-purchase-date-idempotency
-Commit:  chore(seeds): populate purchase dates and clean all dependent entities
-Spec:    Atualizar db/seeds.rb para preencher purchase_date em todas as purchases
-         e limpar/popular entidades existentes no schema: Review, ProductView,
-         Cart e CartItem. Manter volume de 2.100-2.300 purchases e ticket medio
-         entre R$ 65 e R$ 85.
-Aceite:  bin/rails db:seed
-         bin/rails runner "puts Purchase.where(purchase_date: nil).count" # 0
-         bin/rails runner "puts MonthlyRevenueQuery.call(year: 2025, month: 1)" # > 0
-         bin/rails test
-Bloqueia: business-queries, xlsx-exporter
-
-[P1-02] xlsx-exporter
-Branch:  feat/xlsx-exporter
-Commit:  feat(services): add xlsx exporter for analytics dataset
-Spec:    Criar app/services/xlsx_exporter.rb usando caxlsx/caxlsx_rails.
-         Exportar abas para fato vendas, produtos e clientes, usando ItemPurchase
-         como granularidade da fato. Calcular lucro bruto por item.
-Aceite:  bin/rails runner "XlsxExporter.new.call"
-         ls -lh dataset_analitico_mei.xlsx
-         bin/rails test test/services/xlsx_exporter_test.rb
-Bloqueia: docs finais de exportacao
-
-[P1-03] model-data-integrity
+[P1-01] review-uniqueness-integrity
 Branch:  feat/model-data-integrity
-Commit:  feat(models): tighten integrity rules and indexes
-Spec:    Avaliar e implementar integridade faltante: indice unico para reviews
-         por user/product, coerencia Product.stock vs Product.quantity, dependent
-         em Purchase#item_purchases e validacoes para campos usados em analytics.
-Aceite:  bin/rails test test/models/
-         rails db:migrate
-
-[P1-04] business-queries-complete
-Branch:  feat/business-queries-complete
-Commit:  feat(queries): add analytics query objects
-Spec:    Manter MonthlyRevenueQuery e adicionar queries para ticket medio,
-         ranking de produtos, margem por categoria e top clientes.
-Aceite:  bin/rails test test/queries/
-         bin/rails runner "pp MonthlyRevenueQuery.call(year: 2025, month: 1)"
+Commit:  feat(models): enforce one review per user and product
+Spec:    Adicionar validacao e indice unico para reviews por user/product,
+         se a regra de negocio for uma avaliacao por cliente/produto.
+Aceite:  bin/rails test test/models/review_test.rb
+         bin/rails db:migrate:status
 
 --- P2 -----------------------------------------------------------------------
 
-[P2-01] user-model-tests-complete
-Branch:  test/user-model-complete
-Commit:  test(models): cover user normalization and age rules
-Spec:    Adicionar testes para must_be_adult, normalize_name, normalize_phone,
-         state enum, cpf/phone/email uniqueness.
-Aceite:  bin/rails test test/models/user_test.rb
-
-[P2-02] seed-quality-window
-Branch:  chore/seeds-rolling-window
-Commit:  chore(seeds): use rolling 24 month analytics window
-Spec:    Trocar anos fixos 2024/2025 por janela relativa de 24 meses.
-Aceite:  distribuicao mensal cobre 24 meses ate hoje
-
-[P2-03] services-test-directory
-Branch:  test/services-directory
-Commit:  test(services): add service test structure
-Spec:    Criar test/services/ quando XlsxExporter for implementado.
-Aceite:  bin/rails test test/services/
+Nenhum P2 operacional aberto. Manter documentacao sincronizada.
 
 --- P3 -----------------------------------------------------------------------
 
-[P3-01] production-database-review
-Branch:  chore/production-database-review
-Commit:  chore(config): review production database configuration
-Spec:    Decidir se production SQLite em storage/ e suficiente para deploy alvo
-         ou se deve usar DATABASE_URL.
-Aceite:  decisao documentada e config alinhada.
+Nenhum P3 aberto apos security-production-setup.
 ```
 
 ## Secao 9 - Resumo Executivo
@@ -820,20 +744,16 @@ Projeto lido: xlsx_ecommerce
 Data: 2026-06-28
 
 Estado atual em 3 linhas:
-  A suite existe e cobre models, query e integracao, mas bin/rails test falha com 1 failure em UserTest.
-  O banco tem volume analitico forte (2200 purchases, receita R$ 162.291,48, ticket medio R$ 73,77), mas purchase_date esta NULL em todas as compras.
-  Nao ha services nem XlsxExporter; queries existem parcialmente com MonthlyRevenueQuery, atualmente prejudicada pelos seeds.
+  A suite esta verde com 25 testes e 101 assertions.
+  O banco tem volume analitico forte, purchase_date preenchido e entidades operacionais populadas.
+  XlsxExporter, queries analiticas, README, conselhos.md e configuracao de producao existem e foram validados.
 
 Proxima acao recomendada para VERA:
-  Despachar [P0-01] fix-user-test-suite imediatamente para recuperar suite verde.
-  Em seguida, despachar [P1-01] seeds-purchase-date-and-idempotency, pois as queries dependem de purchase_date populado.
+  Fechar a ultima decisao de integridade: review unica por user/product ou multiplas reviews permitidas.
 
 Tasks que dependem de outras:
-  fix-user-test-suite -> todas as demais
-  seeds-purchase-date-and-idempotency -> business-queries-complete
-  seeds-purchase-date-and-idempotency -> xlsx-exporter
-  xlsx-exporter -> docs finais de exportacao/conselhos
+  Nenhuma dependencia bloqueante aberta.
 
 Risco principal identificado:
-  O projeto aparenta ter dados analiticos suficientes, mas a data de negocio usada pelas queries (purchase_date) esta vazia em 100% das purchases. Isso faz a camada analitica retornar zero apesar de haver compras no banco.
+  Sem unicidade de Review, rankings de satisfacao por produto podem contar multiplas avaliacoes do mesmo cliente para o mesmo produto.
 ```
