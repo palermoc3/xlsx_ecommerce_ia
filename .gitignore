@@ -31,5 +31,5 @@
 /public/assets
 
 # Ignore key files for decrypting credentials and more.
+/config/master.key
 /config/*.key
-
