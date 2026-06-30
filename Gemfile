@@ -66,3 +66,5 @@ group :test do
 end
 
 gem "caxlsx", "~> 4.5"
+
+gem "faker", "~> 3.8"

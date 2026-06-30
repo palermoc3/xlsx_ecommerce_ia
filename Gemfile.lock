@@ -120,6 +120,8 @@ GEM
     erubi (1.13.1)
     et-orbi (1.4.0)
       tzinfo
+    faker (3.8.0)
+      i18n (>= 1.8.11, < 2)
     ffi (1.17.4-aarch64-linux-gnu)
     ffi (1.17.4-aarch64-linux-musl)
     ffi (1.17.4-arm-linux-gnu)
@@ -410,6 +412,7 @@ DEPENDENCIES
   capybara
   caxlsx (~> 4.5)
   debug
+  faker (~> 3.8)
   image_processing (~> 1.2)
   importmap-rails
   jbuilder
